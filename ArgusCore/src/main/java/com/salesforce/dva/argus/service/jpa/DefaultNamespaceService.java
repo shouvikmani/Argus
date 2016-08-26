@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.jar.Attributes;
 import javax.persistence.EntityManager;
 
 import static com.salesforce.dva.argus.system.SystemAssert.requireArgument;
@@ -100,6 +101,15 @@ public class DefaultNamespaceService extends DefaultJPAService implements Namesp
         List<Namespace> result = Namespace.findByOwner(emf.get(), owner);
 
         _logger.debug("Query for owner {} resulted in : {}", owner, result);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public List<Namespace> findNamespacesByQualifierKeyword(String keywordRegex) {
+        requireNotDisposed();
+
+        List<Namespace> result = Namespace.findByQualifierPrefix(emf.get(), keywordRegex);
         return result;
     }
 

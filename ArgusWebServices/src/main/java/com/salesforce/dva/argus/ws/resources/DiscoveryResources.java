@@ -31,12 +31,20 @@
 	 
 package com.salesforce.dva.argus.ws.resources;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.salesforce.dva.argus.entity.MetricSchemaRecord;
+import com.salesforce.dva.argus.entity.Namespace;
 import com.salesforce.dva.argus.entity.PrincipalUser;
 import com.salesforce.dva.argus.service.DiscoveryService;
+import com.salesforce.dva.argus.service.NamespaceService;
 import com.salesforce.dva.argus.service.SchemaService.RecordType;
 import com.salesforce.dva.argus.ws.annotation.Description;
+import com.salesforce.dva.argus.ws.dto.NamespaceDto;
+
+import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -57,6 +65,10 @@ public class DiscoveryResources extends AbstractResource {
     //~ Instance fields ******************************************************************************************************************************
 
     private DiscoveryService _discoveryService = system.getServiceFactory().getDiscoveryService();
+
+    private NamespaceService _namespaceService = system.getServiceFactory().getNamespaceService();
+    @Inject
+    Provider<EntityManager> emf;
 
     //~ Methods **************************************************************************************************************************************
 
@@ -103,6 +115,33 @@ public class DiscoveryResources extends AbstractResource {
             return records;
         }
     }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/metrics/keywordsearch")
+    @Description("Discovers keyword matches across namespaces, scopes, and metrics.")
+    public List<? extends Object> keywordPrefixSearch(@Context HttpServletRequest req,
+        @QueryParam("keyword") final String keywordRegex,
+        @QueryParam("limit") final int limit,
+        @QueryParam("page") final int page) {
+        PrincipalUser remoteUser = validateAndGetOwner(req, null);
+        validateResourceAuthorization(req, remoteUser, remoteUser);
+
+        List<MetricSchemaRecord> scopeRecords = _discoveryService.filterRecords("*", keywordRegex + "*", "*", "*", "*", limit, page);
+//        List<MetricSchemaRecord> uniqueScopeRecords = _discoveryService.filterUniqueRecords(scopeRecords, "scope");
+        List<MetricSchemaRecord> metricRecords = _discoveryService.filterRecords("*", "*", keywordRegex + "*", "*", "*", limit, page);
+
+          //Finding Namespace by qualifier does not work...
+          //Need to get namespaces, then convert to MetricSchemaRecord
+//        List<Namespace> namespaces = _namespaceService.findNamespacesByQualifierKeyword(keywordRegex);
+
+        List<MetricSchemaRecord> allRecords = new ArrayList<>();
+        allRecords.addAll(scopeRecords);
+        allRecords.addAll(metricRecords);
+//      Add namespace records too once available
+        return allRecords;
+    }
+
 
     /*
      * @GET @Produces(MediaType.APPLICATION_JSON) @Path("/metrics/queries") @Description("Discover wildcard queries.") public List<String>

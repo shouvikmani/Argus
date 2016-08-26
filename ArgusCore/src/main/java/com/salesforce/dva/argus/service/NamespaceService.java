@@ -90,5 +90,12 @@ public interface NamespaceService extends Service {
      * @return  The list of namespaces.  Will never return null, but may be empty.
      */
     List<Namespace> findNamespacesByOwner(PrincipalUser owner);
+
+    /**
+     * Find the list of namespaces for a given qualifier keyword
+     *
+     */
+    List<Namespace> findNamespacesByQualifierKeyword(String keywordRegex);
+
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

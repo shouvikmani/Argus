@@ -3,7 +3,7 @@ angular.module('argus.services.search', [])
     function($q, $http) {
         this.search = function(value) {
             var valueWildcarded = value + '*';
-            var categories = ['tagv', 'tagk', 'metric', 'scope', 'namespace'];
+            var categories = ['metric', 'scope'];
             var defaultParams = { namespace: '*', scope: '*', metric: '*',
                                 tagk: '*', tagv: '*', limit: 100, page: 1 };
             var discover_endpoint = '/argusws/discover/metrics/schemarecords';
@@ -66,7 +66,7 @@ angular.module('argus.services.search', [])
         //which category it belongs to (namespace, scope, metric, etc.)
         var buildExpression = function(searchResult) {
             if (searchResult != null) {
-                var categories = ['namespace', 'scope', 'metric', 'tagk', 'tagv'];
+                var categories = ['scope', 'metric'];
                 var searchCategory = searchResult.category;
                 var expressionArray = [];
                 for (var i = 0; i < categories.length; i++) {

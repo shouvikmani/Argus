@@ -31,7 +31,11 @@
 	 
 package com.salesforce.dva.argus.entity;
 
+import com.salesforce.dva.argus.inject.SLF4JTypeListener;
 import com.salesforce.dva.argus.system.SystemAssert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static com.salesforce.dva.argus.system.SystemAssert.requireArgument;
 import java.io.Serializable;
 import java.text.MessageFormat;
@@ -74,6 +78,7 @@ import javax.persistence.TypedQuery;
 @NamedQueries(
     {
         @NamedQuery(name = "Namespace.findByQualifier", query = "SELECT n FROM Namespace n WHERE n.qualifier = :qualifier"),
+        @NamedQuery(name = "Namespace.findByQualifierPrefix", query = "SELECT n FROM Namespace n WHERE n.qualifier LIKE :qualifier"),
         @NamedQuery(name = "Namespace.findByOwner", query = "SELECT n FROM Namespace n WHERE n.owner = :owner")
     }
 )
@@ -165,6 +170,22 @@ public class Namespace extends JPAEntity implements Serializable {
             return query.setParameter("owner", owner).getResultList();
         } catch (NoResultException ex) {
             return new ArrayList<>(0);
+        }
+    }
+
+    public static List<Namespace> findByQualifierPrefix(EntityManager em, String qualifierPrefix) {
+        SystemAssert.requireArgument(em != null, "EntityManager cannot be null.");
+        SystemAssert.requireArgument(qualifierPrefix != null && !qualifierPrefix.isEmpty(),
+                "Namespace qualifier prefix cannot be null or empty.");
+
+        TypedQuery<Namespace> query = em.createNamedQuery("Namespace.findByQualifierPrefix", Namespace.class);
+        String wildcardedQualifierPrefix = qualifierPrefix + "%";
+
+        try {
+            List<Namespace> result = query.setParameter("qualifier", wildcardedQualifierPrefix).getResultList();
+            return result;
+        } catch (NoResultException ex) {
+            return null;
         }
     }
 
